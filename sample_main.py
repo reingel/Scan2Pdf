@@ -3,11 +3,12 @@ import sys
 from BookScanSplit import *
 
 
-input_folder_path = '/Users/reingel/Downloads/sample-book/input/'
-output_folder_path = '/Users/reingel/Downloads/sample-book/output/'
-debug_folder_path = '/Users/reingel/Downloads/sample-book/debug/'
+mode = 'photo' # 'text' or 'photo'
+input_folder = '/Users/reingel/Downloads/split_scanned_book/원본/'
+imgout_folder = '/Users/reingel/Downloads/split_scanned_book/image/'
+debug_folder = '/Users/reingel/Downloads/split_scanned_book/debug/'
 
-bss = BookScanSplit(input_folder_path, output_folder_path, debug_folder_path)
+bss = BookScanSplit('text', input_folder, imgout_folder)
 bss.clear_output_folders()
 bss.split()
 

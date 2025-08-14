@@ -12,18 +12,15 @@ from Box import Box
 
 
 class BookScanSplit:
-    def __init__(self, mode, input_folder, output_folder=None, debug_folder=None):
-        if output_folder is None:
-            output_folder = os.path.join(input_folder, 'output_folder')
-
+    def __init__(self, mode, input_folder, imgout_folder, debug_folder=None):
         # folders for loading input images and saving output & debug images
         self.mode = mode
         self.input_folder = input_folder
-        self.output_folder = output_folder
+        self.imgout_folder = imgout_folder
         self.debug_folder = debug_folder
 
         # create folders if not exists
-        self._create_folder(self.output_folder)
+        self._create_folder(self.imgout_folder)
         if self.debug_folder is not None:
             self._create_folder(self.debug_folder)
 
@@ -38,7 +35,7 @@ class BookScanSplit:
 
         # Store paths for input, output, and debug images
         self.input_files = [os.path.join(self.input_folder, f) for f in filenames]
-        self.output_files = [os.path.join(self.output_folder, f) for f in filenames]
+        self.imgout_files = [os.path.join(self.imgout_folder, f) for f in filenames]
         if self.debug_folder:
             self.debug_files = {
                 'hist': [self._debug_file(f, '_1_hist') for f in filenames],
@@ -84,7 +81,7 @@ class BookScanSplit:
         return os.path.join(self.debug_folder, f"{name}{suffix}{ext}")
 
     def clear_output_folders(self):
-        self.clear_folder(self.output_folder)
+        self.clear_folder(self.imgout_folder)
         if self.debug_folder:
             self.clear_folder(self.debug_folder)
 
@@ -103,6 +100,10 @@ class BookScanSplit:
         if self.img is None:
             raise(RuntimeError)
         self.text_data = pytesseract.image_to_data(self.img, output_type=Output.DICT)
+
+        # test code for OCR
+        # string = pytesseract.image_to_string(self.img, lang='jpn+kor')
+        # a=1
     
     def get_img_width_height(self):
         if self.img is None:
@@ -127,7 +128,7 @@ class BookScanSplit:
                 eb.draw(img, *self.styles['page_box_style'])
                 # save image as output file
                 cv2.imwrite(self.debug_files['page'][i], img)
-            cv2.imwrite(self.output_files[i], self.img)
+            cv2.imwrite(self.imgout_files[i], self.img)
             print('single page')
         return is_single
 
@@ -255,7 +256,10 @@ class BookScanSplit:
     def select_center_line(self, k, xc_hi, xc_Hg):
         width, height = self.get_img_width_height()
         x_half = int(width / 2)
-        xc = xc_hi if abs(xc_hi - x_half) < abs(xc_Hg - x_half) else xc_Hg
+        if xc_Hg is None:
+            xc = xc_hi
+        else:
+            xc = xc_hi if abs(xc_hi - x_half) < abs(xc_Hg - x_half) else xc_Hg
 
         img = self.img.copy()
         width, height = self.get_img_width_height()
@@ -319,7 +323,7 @@ class BookScanSplit:
             cv2.imwrite(self.debug_files['page'][k], img)
 
         # 추출된 페이지 저장
-        path, filename = os.path.split(self.output_files[k])
+        path, filename = os.path.split(self.imgout_files[k])
         file, ext = os.path.splitext(filename)
         filename_left = os.path.join(path, file + '-1' + ext)
         filename_right = os.path.join(path, file + '-2' + ext)
@@ -372,11 +376,11 @@ import unittest
 class TestBookScan(unittest.TestCase):
     def test_main(self):
         input_folder= 'input_folder/'
-        output_folder= 'output_folder/'
+        imgout_folder= 'imgout_folder/'
         debug_folder= 'debug_folder/'
 
-        # bss = BookScanSplit(input_folder, output_folder, debug_folder)
-        # bss = BookScanSplit(input_folder, output_folder) # do not save debug images
+        # bss = BookScanSplit(input_folder, imgout_folder, debug_folder)
+        # bss = BookScanSplit(input_folder, imgout_folder) # do not save debug images
         bss = BookScanSplit(input_folder)
         bss.clear_output_folders()
         # bss.clear_folder(debug_folder) # forcefully clear debug folder
